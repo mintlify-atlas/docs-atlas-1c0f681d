@@ -1,7 +1,7 @@
 ---
-title: "Get Started with kChat in Under 5 Minutes"
+title: "Set Up and Run kChat with Supabase: Quickstart Guide"
 sidebarTitle: "Quickstart"
-description: "Learn how to set up kChat with a free Supabase project, configure your credentials, and open the chatroom app in your browser."
+description: "Learn how to create a Supabase project, run the kChat schema, configure your credentials, and start chatting in your browser in minutes."
 ---
 
 This guide walks you through creating a free Supabase project, setting up the required database tables, wiring in your credentials, and serving kChat locally so you can start chatting straight away. No prior Supabase experience is needed, and you will not need to install Node.js, a bundler, or any other tooling — just a text editor and a way to serve static files.
@@ -19,7 +19,7 @@ This guide walks you through creating a free Supabase project, setting up the re
   <Step title="Create the Database Tables">
     In your Supabase project, open the **SQL Editor** (left sidebar) and run the following schema. This creates the three tables kChat depends on: `rooms`, `messages`, and `profiles`.
 
-    ```sql supabase.sql
+    ```sql
     CREATE TABLE public.messages (
       id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
       room_id bigint NOT NULL DEFAULT '1'::bigint,

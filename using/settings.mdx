@@ -1,7 +1,7 @@
 ---
-title: "Configuring kChat Settings and Preferences"
+title: "kChat Settings: Username, Themes, and CSS Preferences"
 sidebarTitle: "Settings"
-description: "Change your username, switch between built-in themes, or apply a custom CSS stylesheet from the kChat Settings page."
+description: "Change your username, switch between the built-in dark and light themes, or apply a custom CSS stylesheet from the kChat Settings page."
 ---
 
 The kChat Settings page lets you personalise your display name and control the visual appearance of the app. You can reach it by clicking the gear icon (⚙) shown on any chat page, or by navigating directly to `/settings/general.html`. All preferences are stored in `localStorage` in your browser, so they persist across sessions on the same device without requiring an account.
@@ -67,7 +67,7 @@ kChat ships with two built-in themes and an unstyled fallback. Theme selection l
   </Tab>
 </Tabs>
 
-If no theme has ever been selected, `settings.js` automatically applies a default theme on first load based on your system preference — `default-dark.css` for dark mode and `default-light.css` for light mode, detected via `prefers-color-scheme`.
+If no theme has ever been selected, `settings.js` automatically applies a default theme on first load based on your system preference — `default-light.css` for light mode and `default-dark.css` for dark mode, detected via `prefers-color-scheme`.
 
 ## Custom CSS
 

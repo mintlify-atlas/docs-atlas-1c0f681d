@@ -1,7 +1,7 @@
 ---
-title: "kChat Database Schema Reference"
+title: "kChat Supabase Schema: rooms, messages, and profiles Tables"
 sidebarTitle: "Schema"
-description: "Full reference for the three Supabase tables used by kChat: rooms, messages, and profiles, including column types and constraints."
+description: "Complete reference for kChat's three Supabase tables — rooms, messages, and profiles — including column types, default values, and foreign key constraints."
 ---
 
 kChat's data model is made up of three Postgres tables managed in Supabase: `rooms`, `messages`, and `profiles`. The `rooms` table holds the available chat channels, `messages` stores every chat message linked to a room, and `profiles` is reserved for future user account features tied to Supabase Auth. All three tables live in the `public` schema and are accessed directly by the Supabase JavaScript client running in the browser.

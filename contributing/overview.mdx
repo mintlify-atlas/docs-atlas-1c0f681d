@@ -1,5 +1,5 @@
 ---
-title: "Contributing to kChat"
+title: "How to Contribute to kChat: Structure, Workflow, and Tips"
 sidebarTitle: "Overview"
 description: "Learn how to contribute to kChat — from understanding the project structure to making changes and submitting improvements on GitHub."
 ---
@@ -21,6 +21,9 @@ chatroom/
 ├── supabase.sql        # Database schema for Supabase
 ├── about.html          # About page
 ├── contact.html        # Contact page
+├── img/
+│   ├── logo.ico           # Favicon
+│   └── logo.png           # Logo image
 ├── themes/
 │   ├── default-dark.css   # Default dark theme variables
 │   └── default-light.css  # Default light theme variables
@@ -33,7 +36,7 @@ chatroom/
 
 Understanding a few core patterns will help you orient quickly in the codebase.
 
-**Theme system** — `settings.js` exports a `confirmCustomCSS()` function that runs on every page load. It checks `localStorage` for a previously saved CSS string. If none exists, it reads the system colour-scheme preference and fetches either `themes/default-dark.css` or `themes/default-light.css` from the server, stores the result in `localStorage`, and injects it as an inline `<style>` tag. The custom-theme editor in `settings/customtheme.html` writes directly to the same `localStorage` key, so the chosen style is shared across all pages.
+**Theme system** — `settings.js` defines a `confirmCustomCSS()` function that runs on every page load. It checks `localStorage` for a previously saved CSS string. If none exists, it reads the system colour-scheme preference and fetches either `themes/default-dark.css` or `themes/default-light.css` from the server, stores the result in `localStorage`, and injects it as an inline `<style>` tag. The custom-theme editor in `settings/customtheme.html` writes directly to the same `localStorage` key, so the chosen style is shared across all pages.
 
 **Messaging** — `chat.js` drives the chat room page. On load, `displayMessages()` queries the Supabase `messages` table for the current room and renders each entry as a `<p>` element containing the sender's username, message content, and a formatted timestamp. The function is called once immediately on `DOMContentLoaded` and then again on a `setInterval` every 1 second to keep the view current. Pressing the Enter key in the message input fires an `insert` call to Supabase and refreshes the display.
 

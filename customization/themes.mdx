@@ -1,5 +1,5 @@
 ---
-title: "Built-In Themes: Dark and Light Mode for kChat"
+title: "kChat Themes: Dark Mode, Light Mode, and CSS Variables"
 sidebarTitle: "Themes"
 description: "Switch between kChat's built-in dark and light themes from the Settings page. Learn how themes are stored and applied using CSS custom properties."
 ---
@@ -46,6 +46,10 @@ The table below lists every variable defined in the built-in themes along with t
 | `--msg-timestamp-color` | Timestamp text color | `gray` | `gray` |
 | `--footer-background-color` | Footer background color | `#484848` | `rgb(140, 140, 140)` |
 
+<Note>
+  `stylesheet.css` references the footer background as `var(--footer-bg-color)`, but both built-in theme files define the variable as `--footer-background-color`. Because of this name mismatch, the footer background color variable in the theme files has no effect on the footer rule in `stylesheet.css` out of the box. When writing a custom theme, use `--footer-bg-color` if you want to control the footer background via the stylesheet rule as written.
+</Note>
+
 ## Default (Dark) theme
 
 ```css themes/default-dark.css
@@ -77,6 +81,10 @@ root {
     --footer-background-color: rgb(140, 140, 140);
 }
 ```
+
+<Note>
+  The built-in theme files use `root` as a selector without the colon prefix. While `:root` is the standard CSS pseudo-class for custom properties, both `root` and `:root` work for the purposes of this app.
+</Note>
 
 <Tip>
   Want to go beyond the built-in palettes? Head to [Custom CSS](/customization/custom-css) to learn how to override these variables — or write an entirely new theme — directly inside kChat's theme editor.

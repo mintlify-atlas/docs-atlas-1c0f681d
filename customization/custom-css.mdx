@@ -1,5 +1,5 @@
 ---
-title: "Build a Custom CSS Theme for kChat"
+title: "Create a Custom CSS Theme for kChat Using CSS Variables"
 sidebarTitle: "Custom CSS"
 description: "Write and apply your own CSS theme in kChat by overriding CSS custom properties. Changes are saved to localStorage and applied instantly."
 ---
@@ -48,9 +48,13 @@ All of kChat's theme-able properties are controlled by the following CSS custom 
   --msg-bg-color: #0f3460;          /* Message bubble background */
   --msg-txt-color: #e0e0e0;         /* Message text */
   --msg-timestamp-color: #888888;   /* Timestamp text */
-  --footer-background-color: #16213e; /* Footer background */
+  --footer-bg-color: #16213e;       /* Footer background */
 }
 ```
+
+<Note>
+  The footer rule in `stylesheet.css` references `var(--footer-bg-color)`. The built-in theme files define a variable named `--footer-background-color` instead, which means the footer background variable in those files does not apply to the footer as styled by `stylesheet.css`. Use `--footer-bg-color` in your custom theme to control the footer background color correctly.
+</Note>
 
 For the full list of variable names along with the values the built-in dark and light themes use, see the [Themes](/customization/themes#css-custom-properties) reference table.
 
