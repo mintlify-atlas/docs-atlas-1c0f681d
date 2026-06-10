@@ -1,0 +1,102 @@
+---
+title: "Configure Supabase as the kChat Backend"
+sidebarTitle: "Supabase Setup"
+description: "Set up a free Supabase project, run the kChat schema, and connect the app to your database using the Supabase JavaScript client."
+---
+
+kChat uses Supabase as its only backend. All application data — rooms, messages, and user profiles — is stored in a Supabase Postgres database. There is no custom server: the Supabase JavaScript client, loaded directly from a CDN, handles every query the app makes, from fetching room lists and displaying messages to inserting new ones in real time.
+
+## Creating a Supabase project
+
+<Steps>
+  <Step title="Sign in to Supabase">
+    Go to [supabase.com](https://supabase.com) and sign in with your account, or create a free one if you don't have one yet.
+  </Step>
+  <Step title="Create a new project">
+    Click **New project** from your organization dashboard. Give the project a name, set a secure database password, and choose the region closest to your users.
+  </Step>
+  <Step title="Wait for provisioning">
+    Supabase will spin up your Postgres database and supporting services. This typically takes around two minutes. You'll be redirected to the project dashboard once it's ready.
+  </Step>
+  <Step title="Retrieve your API credentials">
+    Open **Settings → API** in the left-hand sidebar. Copy your **Project URL** and the **`anon` public key** — this is the publishable key intended for client-side use. You'll need both values in the next step.
+  </Step>
+</Steps>
+
+## Running the schema
+
+Once your project is provisioned, open the **SQL Editor** from the left-hand sidebar in the Supabase dashboard and paste in the following SQL. Running it will create the three tables kChat depends on: `rooms`, `messages`, and `profiles`.
+
+```sql supabase.sql
+CREATE TABLE public.messages (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  room_id bigint NOT NULL DEFAULT '1'::bigint,
+  username text NOT NULL DEFAULT 'secret'::text,
+  content text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT messages_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  first_name text,
+  last_name text,
+  username text UNIQUE,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.rooms (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT rooms_pkey PRIMARY KEY (id)
+);
+```
+
+Click **Run** to execute the script. All three tables will appear under **Table Editor** once it completes successfully.
+
+## Connecting kChat
+
+With your credentials in hand, open `chat.js` and `indextablenames.js` and replace the placeholder values at the top of each file with your actual Project URL and `anon` public key.
+
+<CodeGroup>
+```js chat.js
+const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
+const supabaseKey = 'YOUR_ANON_PUBLIC_KEY';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+```
+
+```js indextablenames.js
+const supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
+const supabaseKey = 'YOUR_ANON_PUBLIC_KEY';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+```
+</CodeGroup>
+
+Both files initialize the same Supabase client at the top level. `chat.js` powers the chat view (fetching and inserting messages, resolving the room name), while `indextablenames.js` powers the index page (listing all available rooms ordered by creation date).
+
+## Creating your first room
+
+The `rooms` table starts empty. Before any chat is possible, insert at least one room. You can do this directly in the **Table Editor** or via the SQL Editor:
+
+```sql
+INSERT INTO public.rooms (name) VALUES ('General');
+```
+
+Once the row exists, its `id` (assigned automatically) can be passed as a URL hash to `chat.html` — for example, `chat.html#roomID=1` — to open that room.
+
+## Row Level Security (RLS)
+
+<Warning>
+  By default, newly created Supabase tables may have Row Level Security disabled, which means any request using your `anon` key can read or write data without restriction. For a public chatroom you should enable RLS and define explicit policies — for example, allowing all users to read `rooms` and `messages`, and allowing inserts into `messages`. Without RLS policies in place, the tables will be inaccessible once RLS is turned on. See the [Supabase RLS documentation](https://supabase.com/docs/guides/database/row-level-security) for full details on writing policies.
+</Warning>
+
+## Supabase JS client
+
+kChat loads the Supabase JavaScript client from a CDN in each HTML file. No build step or `npm install` is required — just include the script tag before your own JS files:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+```
+
+This makes `supabase` available as a global, which `chat.js` and `indextablenames.js` use to call `supabase.createClient()` and initialize the connection.

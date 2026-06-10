@@ -1,0 +1,85 @@
+---
+title: "Navigating Chat Rooms in kChat"
+sidebarTitle: "Rooms"
+description: "Learn how kChat rooms work, how to navigate between them using URL hash routing, and how rooms are stored in the Supabase database."
+---
+
+kChat supports multiple named chat rooms, each uniquely identified by a numeric ID stored in Supabase. Rooms are the top-level organisational unit of the app — every message belongs to exactly one room, and you always chat inside a specific room rather than a shared global feed.
+
+## Room List on the Home Page
+
+When you open `index.html`, the script `indextablenames.js` immediately queries the Supabase `rooms` table, ordering results by `created_at` ascending so that the oldest rooms appear first. Each room is rendered as a clickable link that takes you straight into the chat view for that room.
+
+```js
+const { data, error } = await supabaseClient
+  .from('rooms')
+  .select('id, name, created_at')
+  .order('created_at', { ascending: true })
+
+// Each room becomes a link:
+RoomNamesPlaceholder.innerHTML = data
+  .map(room => `<a href="chat.html#roomID=${room.id}">${room.name}</a>`)
+  .join('');
+```
+
+If no rooms exist yet, the placeholder text reads **"No rooms available."** until a room is added to the database.
+
+## URL Hash Navigation
+
+kChat uses URL hash fragments for room routing. Clicking a room link — or navigating directly in your browser — loads `chat.html` with the room ID embedded in the hash:
+
+```
+chat.html#roomID=<room_id>
+```
+
+For example, to open room 2 directly:
+
+```
+chat.html#roomID=2
+```
+
+On page load, `chat.js` checks the URL for a `#roomID=` fragment and writes that value to `localStorage` under the key `room_id`. This means the **last-visited room is automatically remembered**: if you open `chat.html` without a hash, the app reads `room_id` from `localStorage` and redirects you back to that room immediately.
+
+```js
+if (window.location.href.includes("#roomID=")) {
+  let room_id = window.location.href.split("#roomID=")[1];
+  localStorage.setItem('room_id', room_id);
+}
+else if (localStorage.getItem('room_id') && !window.location.href.includes("chat#roomID=")) {
+  window.location.href = `/chat.html#roomID=${localStorage.getItem('room_id')}`;
+}
+```
+
+## When No Room Is Specified
+
+If there is no `#roomID=` in the URL **and** no `room_id` saved in `localStorage`, kChat prompts you to type a room ID directly:
+
+```js
+else if (!localStorage.getItem('room_id') && !window.location.href.includes("chat#roomID=")) {
+  let room_id = prompt("Which room?");
+  localStorage.setItem('room_id', room_id || "1");
+  window.location.href = `/chat.html#roomID=${room_id}`;
+}
+```
+
+Entering a valid room ID redirects you to that room. If you dismiss the prompt without entering anything, the app falls back to room `1`.
+
+## Creating Rooms
+
+There is no in-app UI for creating rooms. Rooms are added directly in the Supabase dashboard or via the SQL editor. To create a new room, run an `INSERT` against the `rooms` table:
+
+```sql
+INSERT INTO public.rooms (name) VALUES ('General');
+```
+
+The `id` and `created_at` columns are populated automatically. Once inserted, the new room appears on the home page the next time `index.html` is loaded.
+
+<Info>
+  The `rooms` table has three columns:
+
+  | Column | Type | Notes |
+  |---|---|---|
+  | `id` | `bigint` | Auto-generated primary key (`GENERATED ALWAYS AS IDENTITY`) |
+  | `name` | `text` | The display name shown on the home page |
+  | `created_at` | `timestamptz` | Set to `now()` automatically on insert |
+</Info>

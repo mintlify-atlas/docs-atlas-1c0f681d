@@ -1,0 +1,77 @@
+{
+  "projectType": "saas",
+  "projectName": "kChat",
+  "projectDescription": "kChat is a lightweight, browser-based chatroom application powered by Supabase, supporting multiple rooms, customizable themes, and real-time messaging.",
+  "theme": "almond",
+  "primaryColor": "#5f5f5f",
+  "lightColor": "#c3c3c5",
+  "darkColor": "#373736",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "self-hosting"
+            ]
+          },
+          {
+            "group": "Using kChat",
+            "pages": [
+              "using/rooms",
+              "using/messaging",
+              "using/settings"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "customization/themes",
+              "customization/custom-css"
+            ]
+          },
+          {
+            "group": "Database & Backend",
+            "pages": [
+              "backend/supabase-setup",
+              "backend/schema"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/reporting-issues"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Real-time messaging via Supabase polling",
+    "Multiple chat rooms with URL-based navigation",
+    "Persistent username stored in localStorage",
+    "Built-in light and dark default themes",
+    "Custom CSS theme editor",
+    "No build step — plain HTML, CSS, and JavaScript",
+    "Supabase-backed database with rooms, messages, and profiles tables"
+  ],
+  "publicApiSurface": [
+    "Supabase table: messages (id, room_id, username, content, created_at)",
+    "Supabase table: rooms (id, name, created_at)",
+    "Supabase table: profiles (id, first_name, last_name, username)",
+    "URL hash navigation: chat.html#roomID=<id>",
+    "localStorage key: username",
+    "localStorage key: room_id",
+    "localStorage key: CSS (custom theme)",
+    "settings.js: confirmCustomCSS()",
+    "chat.js: displayMessages()",
+    "chat.js: fetchRoomName()",
+    "indextablenames.js: fetchRoomNames()"
+  ]
+}

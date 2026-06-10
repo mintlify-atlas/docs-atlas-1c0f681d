@@ -1,0 +1,62 @@
+---
+title: "kChat: Open-Source Browser Chatrooms Powered by Supabase"
+sidebarTitle: "Introduction"
+description: "kChat is a no-build, open-source chatroom app using plain HTML, CSS, and JavaScript with Supabase as the real-time backend database."
+---
+
+kChat is a lightweight, open-source chatroom application that runs entirely in the browser with zero build tooling required. It is written in plain HTML, CSS, and vanilla JavaScript, and uses [Supabase](https://supabase.com) as its backend for storing rooms, messages, and user profiles. Because there is no compilation or bundling step, you can clone the repository, drop in your Supabase credentials, and serve the files from any static web host — or even straight from your local machine — and have a working multi-room chat application running in minutes.
+
+## Architecture
+
+kChat's architecture is deliberately minimal. Each page is a standalone `.html` file that loads one or more JavaScript files for its logic. Supabase provides the database and its JavaScript client library handles all reads and writes. There is no server-side code, no Node.js runtime, and no framework — only static files and Supabase API calls made directly from the browser.
+
+- **HTML pages** define the structure and layout of each view.
+- **Vanilla JavaScript** handles DOM manipulation, Supabase queries, localStorage reads and writes, and the polling loop that refreshes messages.
+- **Supabase** stores the `rooms`, `messages`, and `profiles` tables and serves them over its REST API.
+
+<Note>
+  kChat loads the Supabase JavaScript client directly from the jsDelivr CDN (`https://cdn.jsdelivr.net/npm/@supabase/supabase-js`). No package manager or local install is required.
+</Note>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Messaging" icon="message">
+    Messages are fetched from Supabase and displayed every second via a `setInterval` polling loop, keeping the conversation current without requiring WebSocket configuration.
+  </Card>
+  <Card title="Multiple Named Chat Rooms" icon="door-open">
+    Rooms are rows in the `rooms` table. The index page lists every room and links directly to it; switching rooms is as simple as clicking a link.
+  </Card>
+  <Card title="Persistent Username" icon="user">
+    When you first open kChat you are prompted for a username. That value is saved to `localStorage` and reused automatically on every subsequent visit — no account or password needed.
+  </Card>
+  <Card title="Dark and Light Themes" icon="moon">
+    On first load, kChat detects your operating system's colour-scheme preference and automatically applies the matching default theme (`default-dark.css` or `default-light.css`).
+  </Card>
+  <Card title="Custom CSS Theme Editor" icon="palette">
+    The Settings page exposes a full CSS text editor. Paste any CSS you like, click Confirm, and it is saved to `localStorage` and applied instantly across every page — no reload needed.
+  </Card>
+  <Card title="No Build Step Required" icon="bolt">
+    There is no bundler, transpiler, or package manager involved. Open the files in any editor, change what you need, and serve them directly. The entire project is plain HTML, CSS, and JavaScript.
+  </Card>
+</CardGroup>
+
+## Page Structure
+
+kChat is made up of several HTML pages, each with a focused responsibility:
+
+| Page | Path | Purpose |
+|---|---|---|
+| Room list | `index.html` | Fetches all rows from the `rooms` table and renders them as clickable links. Also links to About, Contact, and Settings. |
+| Chatroom | `chat.html` | Displays messages for the selected room, polls for new messages every second, and handles sending new messages on Enter. |
+| Settings | `settings/general.html` | Lets users change their username and edit or reset the custom CSS theme. |
+| About | `about.html` | A brief description of the project with links to the source code and contact page. |
+| Contact | `contact.html` | Contact information for the project author. |
+
+JavaScript is split across a few focused files:
+
+| File | Role |
+|---|---|
+| `chat.js` | Core chatroom logic: Supabase client setup, room detection, message display, and message insertion. |
+| `indextablenames.js` | Fetches room names from Supabase and populates the index page. Also contains the Supabase client setup used on the index page. |
+| `settings.js` | Handles CSS theme loading, the custom CSS editor, and username changes. Included on every page. |

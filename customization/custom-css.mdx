@@ -1,0 +1,67 @@
+---
+title: "Build a Custom CSS Theme for kChat"
+sidebarTitle: "Custom CSS"
+description: "Write and apply your own CSS theme in kChat by overriding CSS custom properties. Changes are saved to localStorage and applied instantly."
+---
+
+kChat's entire visual style is driven by CSS custom properties, making it straightforward to create a completely custom theme without touching any source files. You write plain CSS directly in the browser-based theme editor, click a button, and the changes take effect immediately — no build step, no server restart required.
+
+## Accessing the theme editor
+
+Navigate to **Settings → Style** (directly accessible at `/settings/customtheme.html`) to open the theme editor. The text area on that page is pre-populated with whatever CSS is currently saved in your browser, so you always have a starting point to edit rather than a blank slate.
+
+## How to apply custom CSS
+
+<Steps>
+  <Step title="Open the Style tab in Settings">
+    Go to **Settings → Style** (`/settings/customtheme.html`). If you have an existing theme saved, it will already appear in the text area.
+  </Step>
+  <Step title="Paste or write your CSS">
+    Enter your CSS into the text area. You can override individual custom properties, add entirely new rules, or replace the whole stylesheet — anything valid in a `<style>` tag is accepted.
+  </Step>
+  <Step title="Click the confirm button">
+    Click the confirm button below the text area. kChat removes all currently attached stylesheets and injects your CSS as a new `<style>` tag. At the same time, your CSS string is written to `localStorage` under the key `CSS` so it reloads automatically on your next visit.
+  </Step>
+</Steps>
+
+## Starting from a built-in theme
+
+Rather than writing a theme from scratch, you can load one of the built-in themes into the editor and modify it from there. In **Settings → General**, three buttons are available:
+
+- **Default (Dark)** — fetches `themes/default-dark.css`, loads it into the Style editor, and applies it immediately.
+- **Default (Light)** — fetches `themes/default-light.css`, loads it into the Style editor, and applies it immediately.
+- **Unstyled (NOT RECOMMENDED)** — clears all custom styling, leaving only the browser's default rendering.
+
+After clicking either default-theme button, switch to the **Style** tab to see the loaded CSS and begin making changes.
+
+## CSS variables reference
+
+All of kChat's theme-able properties are controlled by the following CSS custom properties. Paste this template into the theme editor as a starting point, then adjust the values to match your desired palette.
+
+```css Custom theme template
+:root {
+  --bg-color: #1a1a2e;              /* Page background */
+  --txt-color: #e0e0e0;             /* Body text */
+  --button-color: #16213e;          /* Button / link background */
+  --button-txt-color: #ffffff;      /* Button text */
+  --button-hover-color: #0f3460;    /* Button hover state */
+  --msg-bg-color: #0f3460;          /* Message bubble background */
+  --msg-txt-color: #e0e0e0;         /* Message text */
+  --msg-timestamp-color: #888888;   /* Timestamp text */
+  --footer-background-color: #16213e; /* Footer background */
+}
+```
+
+For the full list of variable names along with the values the built-in dark and light themes use, see the [Themes](/customization/themes#css-custom-properties) reference table.
+
+## Persistence
+
+The CSS string is saved in `localStorage` under the key `CSS`. It is loaded automatically on every page visit, so your theme persists across sessions without any server-side storage. Because `localStorage` is scoped to each browser, the theme is **device-specific** — switching to a different browser or device starts with a fresh OS-preference detection.
+
+## Resetting to a default theme
+
+To go back to a built-in look, click **Default (Dark)** or **Default (Light)** in **Settings → General**. To remove all custom styling entirely, click the **Unstyled** button in the same section.
+
+<Warning>
+  Clearing your browser's `localStorage` — for example through browser DevTools, a "Clear site data" action, or a privacy-mode session ending — will erase the saved theme. On the next page load, kChat will fall back to auto-detecting your OS color scheme preference and loading the matching default theme.
+</Warning>

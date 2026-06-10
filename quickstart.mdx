@@ -1,47 +1,103 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with kChat in Under 5 Minutes"
+sidebarTitle: "Quickstart"
+description: "Learn how to set up kChat with a free Supabase project, configure your credentials, and open the chatroom app in your browser."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This guide walks you through creating a free Supabase project, setting up the required database tables, wiring in your credentials, and serving kChat locally so you can start chatting straight away. No prior Supabase experience is needed, and you will not need to install Node.js, a bundler, or any other tooling — just a text editor and a way to serve static files.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
 
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Create a Supabase Project">
+    1. Go to [supabase.com](https://supabase.com) and sign up for a free account (or sign in if you already have one).
+    2. Click **New project**, give it a name, choose a region close to you, and set a database password. Wait about a minute for the project to provision.
+    3. Once the project is ready, open **Project Settings → API**. Note down two values — you will need them in a later step:
+       - **Project URL** (looks like `https://<your-project-ref>.supabase.co`)
+       - **Publishable API key** (listed under *Project API keys* as `anon / public`)
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+  <Step title="Create the Database Tables">
+    In your Supabase project, open the **SQL Editor** (left sidebar) and run the following schema. This creates the three tables kChat depends on: `rooms`, `messages`, and `profiles`.
 
-    ```bash
-    your-cli start
+    ```sql supabase.sql
+    CREATE TABLE public.messages (
+      id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+      room_id bigint NOT NULL DEFAULT '1'::bigint,
+      username text NOT NULL DEFAULT 'secret'::text,
+      content text NOT NULL,
+      created_at timestamp with time zone NOT NULL DEFAULT now(),
+      CONSTRAINT messages_pkey PRIMARY KEY (id),
+      CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+    );
+    CREATE TABLE public.profiles (
+      id uuid NOT NULL,
+      first_name text,
+      last_name text,
+      username text UNIQUE,
+      CONSTRAINT profiles_pkey PRIMARY KEY (id),
+      CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+    );
+    CREATE TABLE public.rooms (
+      id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+      name text NOT NULL,
+      created_at timestamp with time zone NOT NULL DEFAULT now(),
+      CONSTRAINT rooms_pkey PRIMARY KEY (id)
+    );
     ```
+
+    Click **Run** to execute the SQL. You should see a success message for each statement.
   </Step>
+
+  <Step title="Create a Room">
+    kChat's index page lists whatever rows exist in the `rooms` table. Insert at least one room so you have something to chat in. Still in the SQL Editor, run:
+
+    ```sql
+    INSERT INTO public.rooms (name) VALUES ('general');
+    ```
+
+    You can add as many rooms as you like by repeating the insert with different names.
+  </Step>
+
+  <Step title="Configure kChat">
+    Clone or download the kChat repository, then open **both** `chat.js` and `indextablenames.js` in your editor. At the top of each file you will find the three lines that initialise the Supabase client. Replace the placeholder URL and key with the values you copied in Step 1:
+
+    ```js
+    const supabaseUrl = 'YOUR_SUPABASE_URL';
+    const supabaseKey = 'YOUR_PUBLISHABLE_KEY';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    ```
+
+    Make the same change in both files — `chat.js` powers the chatroom page and `indextablenames.js` powers the room-list page, and each file initialises its own client.
+  </Step>
+
+  <Step title="Serve the Files">
+    kChat is a static site, so any HTTP server will work. You cannot simply double-click `index.html` in a file browser because some browsers block local `fetch` requests made from `file://` URLs; use a proper server instead.
+
+    <CodeGroup>
+
+    ```bash python
+    python3 -m http.server 8080
+    ```
+
+    ```bash npx
+    npx serve .
+    ```
+
+    </CodeGroup>
+
+    Run either command from the root of the kChat directory (the folder that contains `index.html`).
+  </Step>
+
+  <Step title="Open kChat">
+    Navigate to [http://localhost:8080](http://localhost:8080) in your browser.
+
+    - On your first visit you will be prompted to enter a username. Type anything you like — it is saved to `localStorage` and reused automatically in future sessions.
+    - The index page will display the room (or rooms) you inserted in Step 3. Click a room name to open it.
+    - Type a message in the text input and press **Enter** to send it. New messages from other users appear automatically within one second.
+  </Step>
+
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Ready to share kChat with others? See the [Self-Hosting](/self-hosting) guide for step-by-step instructions on deploying to GitHub Pages, Netlify, Vercel, or any other static web host.
 </Tip>

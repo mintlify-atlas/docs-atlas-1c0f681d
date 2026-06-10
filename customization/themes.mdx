@@ -1,0 +1,83 @@
+---
+title: "Built-In Themes: Dark and Light Mode for kChat"
+sidebarTitle: "Themes"
+description: "Switch between kChat's built-in dark and light themes from the Settings page. Learn how themes are stored and applied using CSS custom properties."
+---
+
+kChat ships with two built-in themes — **Default (Dark)** and **Default (Light)** — as well as an **Unstyled** mode that strips all visual styling. All three options are selectable directly from the Settings page under **Settings → General**, with no configuration files to edit.
+
+## How themes work
+
+When a page loads, `settings.js` calls `confirmCustomCSS()`, which checks `localStorage` for a saved CSS string under the key `CSS`. If a saved value exists, it is injected immediately as a `<style>` tag, replacing any previously attached stylesheets. If no value is saved — for example, on a user's first visit — kChat reads the OS color scheme preference using `window.matchMedia` and automatically fetches the matching built-in theme file. The fetched CSS is then stored in `localStorage.CSS` so it persists on future loads.
+
+```js
+if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+  fetch('themes/default-light.css')
+    .then(response => response.text())
+    .then(data => {
+      localStorage.setItem('CSS', data);
+      confirmCustomCSS();
+    })
+} else {
+  fetch('themes/default-dark.css')
+    .then(response => response.text())
+    .then(data => {
+      localStorage.setItem('CSS', data);
+      confirmCustomCSS();
+    })
+}
+```
+
+## CSS custom properties
+
+Both built-in themes define their colors exclusively through CSS custom properties declared on the root element. `stylesheet.css` references these variables throughout — for example, `background-color: var(--bg-color)` on the `body`, `background-color: var(--msg-bg-color)` on message bubbles, and `color: var(--msg-timestamp-color)` on timestamps. Overriding any of these variables is all it takes to restyle the entire interface.
+
+The table below lists every variable defined in the built-in themes along with the value each theme assigns to it.
+
+| Variable | Description | Default (Dark) | Default (Light) |
+|---|---|---|---|
+| `--bg-color` | Page background color | `#373736` | `#c3c3c5` |
+| `--txt-color` | Body text color | `#c3c3c5` | `#373737` |
+| `--button-color` | Button and link background | `#3d3d3d` | `rgb(170, 170, 170)` |
+| `--button-txt-color` | Button text color | `white` | `#3d3d3d` |
+| `--button-hover-color` | Button hover background | `#353535` | `#e0e0e0` |
+| `--msg-bg-color` | Message bubble background | `#5f5f5f` | `#5f5f5f` |
+| `--msg-txt-color` | Message text color | `#c3c3c5` | `#c3c3c5` |
+| `--msg-timestamp-color` | Timestamp text color | `gray` | `gray` |
+| `--footer-background-color` | Footer background color | `#484848` | `rgb(140, 140, 140)` |
+
+## Default (Dark) theme
+
+```css themes/default-dark.css
+root {
+    --bg-color: #373736;
+    --txt-color: #c3c3c5;
+    --button-color: #3d3d3d;
+    --button-txt-color: white;
+    --button-hover-color: #353535;
+    --msg-bg-color: #5f5f5f;
+    --msg-txt-color: #c3c3c5;
+    --msg-timestamp-color: gray;
+    --footer-background-color: #484848;
+}
+```
+
+## Default (Light) theme
+
+```css themes/default-light.css
+root {
+    --bg-color: #c3c3c5;
+    --txt-color: #373737;
+    --button-color: rgb(170, 170, 170);
+    --button-txt-color: #3d3d3d;
+    --button-hover-color: #e0e0e0;
+    --msg-bg-color: #5f5f5f;
+    --msg-txt-color: #c3c3c5;
+    --msg-timestamp-color: gray;
+    --footer-background-color: rgb(140, 140, 140);
+}
+```
+
+<Tip>
+  Want to go beyond the built-in palettes? Head to [Custom CSS](/customization/custom-css) to learn how to override these variables — or write an entirely new theme — directly inside kChat's theme editor.
+</Tip>

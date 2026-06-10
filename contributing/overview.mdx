@@ -1,0 +1,80 @@
+---
+title: "Contributing to kChat"
+sidebarTitle: "Overview"
+description: "Learn how to contribute to kChat — from understanding the project structure to making changes and submitting improvements on GitHub."
+---
+
+kChat is an open-source, browser-based chatroom app built with plain HTML, CSS, and JavaScript, backed by Supabase. Contributions of all kinds are welcome — whether you're fixing a bug, improving the UI, or suggesting a new feature. The full source code lives at [github.com/korynthian/chatroom](https://github.com/korynthian/chatroom), and getting started is straightforward since there is no build toolchain to configure.
+
+## Project structure
+
+The repository is intentionally minimal. Every file serves a clear, focused purpose:
+
+```text
+chatroom/
+├── index.html          # Room list / home page
+├── chat.html           # Chat room page
+├── chat.js             # Messaging logic (fetch, send, display)
+├── indextablenames.js  # Room list fetching for index page
+├── settings.js         # Theme/CSS application and settings logic
+├── stylesheet.css      # Base stylesheet (CSS custom properties)
+├── supabase.sql        # Database schema for Supabase
+├── about.html          # About page
+├── contact.html        # Contact page
+├── themes/
+│   ├── default-dark.css   # Default dark theme variables
+│   └── default-light.css  # Default light theme variables
+└── settings/
+    ├── general.html        # Settings: username + theme selection
+    └── customtheme.html    # Settings: custom CSS editor
+```
+
+## Key concepts
+
+Understanding a few core patterns will help you orient quickly in the codebase.
+
+**Theme system** — `settings.js` exports a `confirmCustomCSS()` function that runs on every page load. It checks `localStorage` for a previously saved CSS string. If none exists, it reads the system colour-scheme preference and fetches either `themes/default-dark.css` or `themes/default-light.css` from the server, stores the result in `localStorage`, and injects it as an inline `<style>` tag. The custom-theme editor in `settings/customtheme.html` writes directly to the same `localStorage` key, so the chosen style is shared across all pages.
+
+**Messaging** — `chat.js` drives the chat room page. On load, `displayMessages()` queries the Supabase `messages` table for the current room and renders each entry as a `<p>` element containing the sender's username, message content, and a formatted timestamp. The function is called once immediately on `DOMContentLoaded` and then again on a `setInterval` every 1 second to keep the view current. Pressing the Enter key in the message input fires an `insert` call to Supabase and refreshes the display.
+
+**Room navigation** — The active room is communicated via the URL hash `#roomID=<id>` (for example, `chat.html#roomID=2`). When `chat.js` detects this hash on load, it writes the room ID to `localStorage` so the same room is reopened on subsequent visits. `indextablenames.js` handles the index page: it queries the Supabase `rooms` table and renders a link for each room using the same `chat.html#roomID=<id>` pattern.
+
+## Making changes
+
+<Note>
+  kChat has no build step. As soon as you save a file and refresh the browser, your changes are live. There is nothing to compile, bundle, or transpile.
+</Note>
+
+<Steps>
+  <Step title="Fork the repository on GitHub">
+    Visit [github.com/korynthian/chatroom](https://github.com/korynthian/chatroom) and click **Fork** to create your own copy of the repository under your GitHub account.
+  </Step>
+  <Step title="Clone your fork locally">
+    ```bash
+    git clone https://github.com/<your-username>/chatroom.git
+    cd chatroom
+    ```
+  </Step>
+  <Step title="Serve the project locally">
+    Because kChat uses ES modules and fetches theme files over HTTP, you need a local server — opening `index.html` directly as a `file://` URL will not work correctly. A one-liner with Python is enough:
+
+    ```bash
+    python3 -m http.server 8080
+    ```
+
+    Then open `http://localhost:8080` in your browser.
+  </Step>
+  <Step title="Make your changes">
+    Edit the appropriate HTML, CSS, or JavaScript file. The project structure above maps each feature area to its file. For example, to change how messages are displayed, edit `chat.js`; to adjust the default colour scheme, edit the files in `themes/`.
+  </Step>
+  <Step title="Test in a browser against your own Supabase project">
+    kChat reads from and writes to a Supabase backend. For local testing, set up your own Supabase project using the schema in `supabase.sql`, then update the `supabaseUrl` and `supabaseKey` constants at the top of `chat.js` and `indextablenames.js` to point to your project. Verify that messaging, room listing, and theme persistence all work as expected.
+  </Step>
+  <Step title="Open a pull request">
+    Push your branch to your fork and open a pull request against the `main` branch of [korynthian/chatroom](https://github.com/korynthian/chatroom). Describe what you changed and why, and include screenshots if your changes affect the UI.
+  </Step>
+</Steps>
+
+## Contact
+
+If you have questions while contributing, you can reach the maintainer through several channels — by email, GitHub Issues, or directly in the in-app support room. See the [Contact](/contributing/reporting-issues) page for all options.

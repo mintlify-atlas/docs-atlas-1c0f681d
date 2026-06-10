@@ -1,0 +1,99 @@
+---
+title: "kChat Database Schema Reference"
+sidebarTitle: "Schema"
+description: "Full reference for the three Supabase tables used by kChat: rooms, messages, and profiles, including column types and constraints."
+---
+
+kChat's data model is made up of three Postgres tables managed in Supabase: `rooms`, `messages`, and `profiles`. The `rooms` table holds the available chat channels, `messages` stores every chat message linked to a room, and `profiles` is reserved for future user account features tied to Supabase Auth. All three tables live in the `public` schema and are accessed directly by the Supabase JavaScript client running in the browser.
+
+## `rooms`
+
+The `rooms` table represents each available chat channel. The index page queries this table to render the list of rooms a user can join, ordered by `created_at` ascending.
+
+<ParamField path="id" type="bigint">
+  Auto-generated primary key. Assigned automatically by Postgres `GENERATED ALWAYS AS IDENTITY`.
+</ParamField>
+<ParamField path="name" type="text" required>
+  The display name of the room. Shown on the index page and in the chat header.
+</ParamField>
+<ParamField path="created_at" type="timestamptz">
+  Timestamp when the room was created. Defaults to `now()`. Rooms are listed ordered by this field ascending.
+</ParamField>
+
+## `messages`
+
+The `messages` table stores every chat message sent across all rooms. `chat.js` queries this table filtered by `room_id` and ordered by `created_at` ascending to display the conversation, and polls for new messages every second.
+
+<ParamField path="id" type="bigint">
+  Auto-generated primary key.
+</ParamField>
+<ParamField path="room_id" type="bigint" required>
+  Foreign key referencing `rooms.id`. Defaults to `1`. Identifies which room this message belongs to.
+</ParamField>
+<ParamField path="username" type="text" required>
+  Display name of the sender. Sourced from `localStorage.username`. Defaults to `'secret'`.
+</ParamField>
+<ParamField path="content" type="text" required>
+  The message body.
+</ParamField>
+<ParamField path="created_at" type="timestamptz">
+  Timestamp when the message was inserted. Defaults to `now()`. Used for ordering messages chronologically.
+</ParamField>
+
+## `profiles`
+
+The `profiles` table stores optional user profile information linked to Supabase Auth identities. Each row's `id` corresponds to a row in the `auth.users` table managed by Supabase.
+
+<ParamField path="id" type="uuid" required>
+  Primary key. References `auth.users(id)` from Supabase Auth.
+</ParamField>
+<ParamField path="first_name" type="text">
+  Optional first name.
+</ParamField>
+<ParamField path="last_name" type="text">
+  Optional last name.
+</ParamField>
+<ParamField path="username" type="text">
+  Unique username for the user. Optional.
+</ParamField>
+
+<Note>
+  The `profiles` table is defined for future user account features and is not actively used in the current UI. The app currently sources the sender's display name from `localStorage.username`, set via a browser prompt on first visit.
+</Note>
+
+## Relationships
+
+kChat's schema has two foreign key relationships:
+
+- **`messages.room_id` → `rooms.id`**: Every message belongs to a room. The `fk_room` constraint enforces referential integrity, preventing messages from being inserted with a `room_id` that doesn't correspond to an existing room.
+- **`profiles.id` → `auth.users.id`**: The `profiles_id_fkey` constraint ties each profile row to a Supabase Auth user. This relationship is defined for future authentication integration and is not yet exercised by the current UI.
+
+## Full SQL schema
+
+<Accordion title="Full SQL schema">
+```sql
+CREATE TABLE public.messages (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  room_id bigint NOT NULL DEFAULT '1'::bigint,
+  username text NOT NULL DEFAULT 'secret'::text,
+  content text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT messages_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_room FOREIGN KEY (room_id) REFERENCES public.rooms(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  first_name text,
+  last_name text,
+  username text UNIQUE,
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.rooms (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  name text NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT rooms_pkey PRIMARY KEY (id)
+);
+```
+</Accordion>

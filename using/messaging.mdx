@@ -1,0 +1,92 @@
+---
+title: "Sending and Receiving Messages in kChat"
+sidebarTitle: "Messaging"
+description: "Understand how kChat fetches, displays, and sends messages using Supabase, including the polling interval and message data structure."
+---
+
+kChat's messaging model is straightforward: messages live in a Supabase `messages` table and the chat page polls that table every second, updating the view whenever new content arrives. There is no WebSocket or realtime subscription — the simplicity of the interval-based approach means the app works reliably across all browsers without any additional configuration.
+
+## Setting Your Username
+
+The very first time you visit the chat page, kChat checks `localStorage` for a saved username. If none is found, a browser prompt asks you to enter one:
+
+```js
+if (!localStorage.getItem('username')) {
+  const username = prompt("Please enter your username:");
+  localStorage.setItem('username', username || "Secret");
+}
+```
+
+Your username is stored under the `localStorage` key `username`. If you dismiss the prompt without typing anything, the app defaults to `"Secret"`. You can change your username at any time from the [Settings page](/using/settings).
+
+## Sending a Message
+
+Type your message in the input box at the bottom of the chat page and press **Enter**. kChat inserts the message into the Supabase `messages` table using the JS client, attaching the current room ID and your username from `localStorage`:
+
+```js
+const { data, error } = await supabaseClient
+  .from('messages')
+  .insert({
+    room_id: localStorage.getItem('room_id'),
+    username: localStorage.getItem('username'),
+    content: messageInput.value
+  })
+```
+
+After a successful insert the input field is cleared and `displayMessages()` is called immediately so your message appears without waiting for the next polling cycle.
+
+## Receiving Messages
+
+Message fetching is handled by the `displayMessages()` function, which runs once on page load and then on a repeating 1000 ms interval:
+
+```js
+displayMessages(); // called immediately on DOMContentLoaded
+setInterval(displayMessages, 1000);
+```
+
+Each call queries the `messages` table for the current room, ordered oldest-first:
+
+```js
+const { data, error } = await supabaseClient
+  .from('messages')
+  .select('id, username, content, created_at')
+  .eq('room_id', Number(localStorage.getItem('room_id')))
+  .order('created_at', { ascending: true })
+```
+
+Only messages belonging to the active `room_id` are fetched, so switching rooms (by navigating to a different `#roomID=` hash) automatically loads that room's history on the next poll.
+
+## Auto-Scroll
+
+After each fetch, kChat compares the new HTML content of the message container with what was previously rendered. If the content has changed — meaning at least one new message arrived — the container scrolls to the bottom automatically:
+
+```js
+previousMessages = messageBox.innerHTML;
+// ... render new messages ...
+currentMessages = messageBox.innerHTML;
+if (previousMessages !== currentMessages) {
+  scrollToBottom();
+}
+```
+
+This means the view only jumps to the bottom when there is genuinely new content, so you can scroll up to read history without being interrupted unless a new message arrives.
+
+## Message Format
+
+Each message is rendered as a `<p>` element containing the sender's username in bold, the message text, and a localised timestamp derived from `created_at`:
+
+```html
+<p class="message" id="message${msg.id}">
+  <strong>${msg.username}</strong>: 
+  ${msg.content} 
+  <span class="timestamp">
+    ${new Date(msg.created_at).toLocaleString()}
+  </span>
+</p>
+```
+
+The timestamp is formatted by the browser using `toLocaleString()`, so it reflects the viewer's local timezone and locale settings automatically. If the room has no messages yet, the container displays `"No messages yet."` as a plain-text fallback.
+
+<Note>
+  Messages are never deleted automatically. Every message inserted into the `messages` table remains there indefinitely. There is currently no in-app moderation or message-deletion UI, so pruning old messages must be done directly in the Supabase dashboard or via SQL.
+</Note>

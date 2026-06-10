@@ -1,0 +1,88 @@
+---
+title: "Configuring kChat Settings and Preferences"
+sidebarTitle: "Settings"
+description: "Change your username, switch between built-in themes, or apply a custom CSS stylesheet from the kChat Settings page."
+---
+
+The kChat Settings page lets you personalise your display name and control the visual appearance of the app. You can reach it by clicking the gear icon (⚙) shown on any chat page, or by navigating directly to `/settings/general.html`. All preferences are stored in `localStorage` in your browser, so they persist across sessions on the same device without requiring an account.
+
+## Changing Your Username
+
+Your username is what other users see next to your messages in the chat pane.
+
+<Steps>
+  <Step title="Open Settings">
+    Click the ⚙ link on any chat page, or navigate to `/settings/general.html`.
+  </Step>
+  <Step title="Click Change Username">
+    Press the **Change username** button. A browser prompt will appear asking for your new display name.
+  </Step>
+  <Step title="Enter your new name">
+    Type the name you want and confirm. The value is saved to `localStorage` under the key `username`. If you dismiss the prompt without entering anything, the name defaults to `"Secret"`.
+  </Step>
+</Steps>
+
+The change takes effect immediately for all new messages you send after updating your name. Messages you sent previously will continue to display your old username, as that value was already written to the database at the time of sending.
+
+## Themes
+
+kChat ships with two built-in themes and an unstyled fallback. Theme selection loads the chosen CSS and stores its full text in `localStorage` under the key `CSS`, which `settings.js` re-applies on every page load.
+
+<Tabs>
+  <Tab title="Default (Dark)">
+    Click **Default (Dark)** to load `themes/default-dark.css`. The stylesheet content is fetched from the server, stored in `localStorage` as `CSS`, and applied immediately as an inline `<style>` block.
+
+    ```js
+    fetch('/themes/default-dark.css')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('customCSS').value = data;
+        confirmCustomCSS(); // saves to localStorage and applies
+      })
+    ```
+  </Tab>
+  <Tab title="Default (Light)">
+    Click **Default (Light)** to load `themes/default-light.css`. The same fetch-and-store process runs as for the dark theme, keeping the selected stylesheet active across pages and sessions.
+
+    ```js
+    fetch('/themes/default-light.css')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('customCSS').value = data;
+        confirmCustomCSS();
+      })
+    ```
+  </Tab>
+  <Tab title="Unstyled">
+    Click **Unstyled (NOT RECOMMENDED)** to strip all theming. This sets the `CSS` key in `localStorage` to the placeholder value `//unstyled theme` and removes all existing stylesheets from the page, leaving only the browser's default styling.
+
+    ```js
+    document.getElementById('customCSS').value = "//unstyled theme"
+    confirmCustomCSS();
+    ```
+
+    <Warning>
+      The unstyled option removes all visual styling from kChat and is not recommended for regular use. Switch back to a default theme at any time by clicking one of the theme buttons.
+    </Warning>
+  </Tab>
+</Tabs>
+
+If no theme has ever been selected, `settings.js` automatically applies a default theme on first load based on your system preference — `default-dark.css` for dark mode and `default-light.css` for light mode, detected via `prefers-color-scheme`.
+
+## Custom CSS
+
+For full control over kChat's appearance, you can supply your own CSS. See the [Custom CSS guide](/customization/custom-css) for instructions on building and applying a complete custom theme.
+
+## localStorage Keys Reference
+
+All kChat preferences are stored client-side. The following keys are written and read by the app:
+
+| Key | Description |
+|---|---|
+| `username` | Your display name, shown next to every message you send |
+| `room_id` | The numeric ID of the last room you visited; used to redirect you back automatically |
+| `CSS` | The full text of the active stylesheet, applied as an inline `<style>` block on every page |
+
+<Tip>
+  After changing a theme or any other setting, reload the current page to ensure the new values are fully applied across all page elements. The Settings page itself displays a reminder: *"You may need to reload for settings to take effect."*
+</Tip>

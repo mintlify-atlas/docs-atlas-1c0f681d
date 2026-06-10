@@ -1,0 +1,88 @@
+---
+title: "Deploy kChat on Any Static File Host"
+sidebarTitle: "Self-Hosting"
+description: "Host your own kChat instance on GitHub Pages, Netlify, Vercel, or any static web host — no server-side code required."
+---
+
+kChat is a fully static application — every page is plain HTML, and all logic runs in the browser through vanilla JavaScript. There is no build step, no server-side runtime, and no compilation required before deployment. This means you can host your own kChat instance on any service that is capable of serving HTML files over HTTPS, including free tiers of GitHub Pages, Netlify, and Vercel. The only external dependency at runtime is the Supabase project you configured during setup.
+
+<Warning>
+  Your Supabase project URL and publishable API key are embedded directly in `chat.js` and `indextablenames.js`, which are downloaded by every visitor's browser. **Never use your Supabase service-role (secret) key in these files.** The publishable (`anon`) key is designed for client-side use, but it is still visible to anyone who views the page source. Protect your data by configuring Row Level Security policies in Supabase (see below).
+</Warning>
+
+## Hosting Options
+
+<Tabs>
+
+  <Tab title="GitHub Pages">
+    GitHub Pages serves static files directly from a repository branch at no cost.
+
+    1. Push the kChat directory (with your credentials already set in `chat.js` and `indextablenames.js`) to a GitHub repository.
+    2. In the repository, go to **Settings → Pages**.
+    3. Under **Build and deployment**, set **Source** to `Deploy from a branch`, choose the `main` branch, and set the folder to `/ (root)`.
+    4. Click **Save**. GitHub will publish the site within a minute or two and display the URL (typically `https://<your-username>.github.io/<repo-name>/`).
+
+    No build command is needed. GitHub Pages will serve `index.html` as the default document for the root URL.
+  </Tab>
+
+  <Tab title="Netlify">
+    Netlify can deploy a static site either by dragging a folder into the dashboard or by connecting a GitHub repository.
+
+    **Option A — Drag and Drop**
+    1. Log in to [netlify.com](https://netlify.com) and go to the **Sites** tab.
+    2. Drag your kChat project folder into the drag-and-drop zone on the page.
+    3. Netlify will upload, deploy, and assign a public URL instantly.
+
+    **Option B — Connect a GitHub Repo**
+    1. Click **Add new site → Import an existing project** and authorise Netlify to access GitHub.
+    2. Select your kChat repository.
+    3. On the build settings screen, leave **Build command** empty and set **Publish directory** to `.` (the repository root).
+    4. Click **Deploy site**.
+
+    Subsequent pushes to the connected branch will trigger automatic redeployments.
+  </Tab>
+
+  <Tab title="Vercel">
+    Vercel is designed for frontend frameworks but works equally well for plain static sites.
+
+    1. Log in to [vercel.com](https://vercel.com) and click **Add New → Project**.
+    2. Import your kChat GitHub repository.
+    3. On the configuration screen:
+       - **Framework Preset**: Other
+       - **Build Command**: *(leave empty)*
+       - **Output Directory**: `.`
+    4. Click **Deploy**.
+
+    Vercel will deploy the project and provide a public URL. Each push to the main branch will automatically trigger a new deployment.
+  </Tab>
+
+  <Tab title="Local / Any Server">
+    For local use or any host that gives you shell access, serve the kChat directory with any static file server. Run either of the following commands from the project root:
+
+    ```bash python
+    python3 -m http.server 8080
+    ```
+
+    ```bash npx
+    npx serve .
+    ```
+
+    For a more permanent local setup you can also use Caddy, Nginx, or Apache — point the document root at the kChat directory and let the server handle the rest.
+  </Tab>
+
+</Tabs>
+
+## Securing Your Data with Row Level Security
+
+Because the Supabase publishable key is visible in client-side JavaScript, anyone who finds your project URL could, in principle, read or write to your Supabase tables directly. Supabase's **Row Level Security (RLS)** feature lets you define fine-grained policies that control exactly which operations are permitted on each table.
+
+At a minimum, consider adding RLS policies that:
+- Allow any user to **read** (`SELECT`) from the `messages` and `rooms` tables.
+- Allow any user to **insert** (`INSERT`) into the `messages` table.
+- Restrict `UPDATE` and `DELETE` on `messages` to the row owner or an authenticated admin role.
+
+You can enable RLS and add policies from the **Authentication → Policies** section of the Supabase dashboard, or via the SQL editor. Refer to the [Supabase RLS documentation](https://supabase.com/docs/guides/database/postgres/row-level-security) for full details.
+
+<Note>
+  All user preferences — including username and any custom CSS theme — are stored in the browser's `localStorage`. This data is local to the device and browser you are using; it is not written to Supabase and will not carry over to other devices or browsers automatically.
+</Note>
